@@ -79,32 +79,24 @@ class Code:
         drone.location = Location.RED
         drone.inventory.append(ITEM[Location.RED])
         field.item_left[Location.RED] -= 1
-        if field.item_left[Location.RED] < 0:
-            print('WARNING: field.item_left[Location.RED] < 0')
 
     @classmethod
     def blue(cls, field, drone, previous_code_name='', next_code_name=''):
         drone.location = Location.BLUE
         drone.inventory.append(ITEM[Location.BLUE])
         field.item_left[Location.BLUE] -= 1
-        if field.item_left[Location.BLUE] < 0:
-            print('WARNING: field.item_left[Location.BLUE] < 0')
 
     @classmethod
     def green(cls, field, drone, previous_code_name='', next_code_name=''):
         drone.location = Location.GREEN
         drone.inventory.append(ITEM[Location.GREEN])
         field.item_left[Location.GREEN] -= 1
-        if field.item_left[Location.GREEN] < 0:
-            print('WARNING: field.item_left[Location.GREEN] < 0')
 
     @classmethod
     def purple(cls, field, drone, previous_code_name='', next_code_name=''):
         drone.location = Location.PURPLE
         drone.inventory.append(ITEM[Location.PURPLE])
         field.item_left[Location.PURPLE] -= 1
-        if field.item_left[Location.PURPLE] < 0:
-            print('WARNING: field.item_left[Location.PURPLE] < 0')
 
     @classmethod
     def white(cls, field, drone, previous_code_name='', next_code_name=''):
@@ -214,18 +206,23 @@ def create_all_code_patterns_generator():
                         yield [code1, code2, code3, code4]
 
 
-def run(hp, location, inventory):
+def run(hp, location, inventory, code_patterns=None):
     # メインの処理です。 hp, location, inventory の値から、何が起こったのか分析します。
     # inventory は list です。最終的に比較に使いますが、そのとき順番は不問です。
     # 順番を気にせず比較するため、あらかじめソートしておきます。
     sorted_inventory = sorted(inventory)
+
+    # 今回の分析において可能性のある code_patterns です。
+    # 与えられなければ、全可能性を用意します。(19,199通りの試算なので iterator で用意。)
+    if code_patterns == None:
+        code_patterns = create_all_code_patterns_generator()
 
     # 分析は次のように行います。
     # 1. 全可能性ぶん、ドローンを用意して、全可能性ぶんの結果を観測する。
     # 2. 与えられた値と合致するパターンが、今回起こったパターンです。
     #    もちろん複数パターンが算出されることもあるでしょう。
     possible_code_pattern = []
-    for code_pattern in create_all_code_patterns_generator():
+    for code_pattern in code_patterns:
 
         # 今回の code_pattern のための drone を生成します。
         drone = Drone()
@@ -236,8 +233,8 @@ def run(hp, location, inventory):
         # [Code.***, Code.***, Code.***, Code.***]
         for i, code in enumerate(code_pattern):
             # コレの前の code name
-            previous_code_name = '' if i == 0 else code_pattern[i-1].__name__
-            next_code_name = '' if i == 3 else code_pattern[i+1].__name__
+            previous_code_name = '' if i == 0 else code_pattern[i - 1].__name__
+            next_code_name = '' if i == 3 else code_pattern[i + 1].__name__
             code(
                 field,
                 drone,
@@ -251,17 +248,24 @@ def run(hp, location, inventory):
         drone.inventory.sort()
         if hp == drone.hp and location == drone.location and sorted_inventory == drone.inventory:
             possible_code_pattern.append((
-                code_pattern[0].__name__,
-                code_pattern[1].__name__,
-                code_pattern[2].__name__,
-                code_pattern[3].__name__,
+                code_pattern[0],
+                code_pattern[1],
+                code_pattern[2],
+                code_pattern[3],
             ))
 
-    pprint(possible_code_pattern)
+    return possible_code_pattern
 
 
 if __name__ == '__main__':
-    run(
+
+    # 毎回 code func のリストを map __name__ かけて print してチェックするのが面倒なので関数化しています。
+    def pprint_code_patterns(code_patterns):
+        for _ in code_patterns:
+            print(tuple(map(lambda x: x.__name__, _)))
+
+    # 1st game の結果を入力してね。
+    drone_after_first_game = Drone(
         hp=-1,
         location=Location.RED,
         inventory=[
@@ -269,3 +273,12 @@ if __name__ == '__main__':
             ITEM[Location.PURPLE],
         ],
     )
+    # こちらが 1st game で実行されたと考えられるコードの羅列。
+    guesses_for_first_game = run(
+        hp=drone_after_first_game.hp,
+        location=drone_after_first_game.location,
+        inventory=drone_after_first_game.inventory,
+    )
+    pprint_code_patterns(guesses_for_first_game)
+
+    # 2nd game の結果を入力してね。

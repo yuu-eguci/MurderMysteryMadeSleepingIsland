@@ -30,7 +30,7 @@ jobs:
           pip install pipenv
       - name: Install dependencies
         run: |
-          pipenv sync
+          pipenv sync --dev
       - name: Lint with flake8
         # NOTE: flake8 については vscode の拡張機能で利用している程度であり、
         #       まだどんなオプションがよさそうか、は検討していません。でも max-line-length が必須なのは知ってる。

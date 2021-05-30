@@ -16,6 +16,7 @@
 3人目は紫コードの持ち主です。
 """
 
+from pprint import pprint
 from enum import Enum, auto
 import itertools
 
@@ -63,10 +64,10 @@ class Field:
 
     def __repr__(self):
         return (
-            f'Field(red_item_left={self.red_item_left},'
-            f' blue_item_left={self.blue_item_left},'
-            f' green_item_left={self.green_item_left},'
-            f' purple_item_left={self.purple_item_left})'
+            f'Field(red_item_left={self.item_left[Location.RED]},'
+            f' blue_item_left={self.item_left[Location.BLUE]},'
+            f' green_item_left={self.item_left[Location.GREEN]},'
+            f' purple_item_left={self.item_left[Location.PURPLE]})'
         )
 
 
@@ -78,7 +79,7 @@ class Code:
         drone.location = Location.RED
         drone.inventory.append(ITEM[Location.RED])
         field.item_left[Location.RED] -= 1
-        if field.red_item_left < 0:
+        if field.item_left[Location.RED] < 0:
             print('WARNING: field.item_left[Location.RED] < 0')
 
     @classmethod
@@ -86,7 +87,7 @@ class Code:
         drone.location = Location.BLUE
         drone.inventory.append(ITEM[Location.BLUE])
         field.item_left[Location.BLUE] -= 1
-        if field.blue_item_left < 0:
+        if field.item_left[Location.BLUE] < 0:
             print('WARNING: field.item_left[Location.BLUE] < 0')
 
     @classmethod
@@ -94,7 +95,7 @@ class Code:
         drone.location = Location.GREEN
         drone.inventory.append(ITEM[Location.GREEN])
         field.item_left[Location.GREEN] -= 1
-        if field.green_item_left < 0:
+        if field.item_left[Location.GREEN] < 0:
             print('WARNING: field.item_left[Location.GREEN] < 0')
 
     @classmethod
@@ -102,7 +103,7 @@ class Code:
         drone.location = Location.PURPLE
         drone.inventory.append(ITEM[Location.PURPLE])
         field.item_left[Location.PURPLE] -= 1
-        if field.purple_item_left < 0:
+        if field.item_left[Location.PURPLE] < 0:
             print('WARNING: field.item_left[Location.PURPLE] < 0')
 
     @classmethod
@@ -112,6 +113,10 @@ class Code:
             pass
             # drone の現在地のアイテムを3つまで取得。3つ残っていない場合もあることに注意。
             for i in range(3):
+                # アイテム取得は Location.INITIAL では不可。
+                if drone.location == Location.INITIAL:
+                    break
+
                 if field.item_left[drone.location] < 0:
                     break
                 field.item_left[drone.location] -= 1
@@ -211,23 +216,56 @@ def create_all_code_patterns_generator():
 
 def run(hp, location, inventory):
     # メインの処理です。 hp, location, inventory の値から、何が起こったのか分析します。
+    # inventory は list です。最終的に比較に使いますが、そのとき順番は不問です。
+    # 順番を気にせず比較するため、あらかじめソートしておきます。
+    sorted_inventory = sorted(inventory)
 
     # 分析は次のように行います。
     # 1. 全可能性ぶん、ドローンを用意して、全可能性ぶんの結果を観測する。
     # 2. 与えられた値と合致するパターンが、今回起こったパターンです。
     #    もちろん複数パターンが算出されることもあるでしょう。
-    for i, code_pattern in enumerate(create_all_code_patterns_generator()):
-        print(f'{i} pattern,', [
-            code_pattern[0].__name__,
-            code_pattern[1].__name__,
-            code_pattern[2].__name__,
-            code_pattern[3].__name__,
-        ])
+    possible_code_pattern = []
+    for code_pattern in create_all_code_patterns_generator():
+
+        # 今回の code_pattern のための drone を生成します。
+        drone = Drone()
+        # 今回の code_pattern のための field を生成します。
+        field = Field()
+
+        # code_pattern はこんな感じになっています。順番に実行します。
+        # [Code.***, Code.***, Code.***, Code.***]
+        for i, code in enumerate(code_pattern):
+            # コレの前の code name
+            previous_code_name = '' if i == 0 else code_pattern[i-1].__name__
+            next_code_name = '' if i == 3 else code_pattern[i+1].__name__
+            code(
+                field,
+                drone,
+                previous_code_name=previous_code_name,
+                next_code_name=next_code_name,
+            )
+
+        # code_pattern のシミュレーションを終えた drone の状態が、
+        # 与えられたものと一致した場合、今回の code_pattern こそが
+        # 実際に発生した code_pattern である可能性があります。
+        drone.inventory.sort()
+        if hp == drone.hp and location == drone.location and sorted_inventory == drone.inventory:
+            possible_code_pattern.append((
+                code_pattern[0].__name__,
+                code_pattern[1].__name__,
+                code_pattern[2].__name__,
+                code_pattern[3].__name__,
+            ))
+
+    pprint(possible_code_pattern)
 
 
 if __name__ == '__main__':
     run(
-        hp=3,
+        hp=-1,
         location=Location.RED,
-        inventory=[],
+        inventory=[
+            ITEM[Location.RED],
+            ITEM[Location.PURPLE],
+        ],
     )

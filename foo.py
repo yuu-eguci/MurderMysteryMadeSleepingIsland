@@ -38,6 +38,15 @@ ITEM = {
 
 
 class Player(Enum):
+    # 実際のプレイヤーを表す enum です。
+    # 名前は実際のゲームで使われている名称です。
+    PYTHON = auto()
+    TASK = auto()
+    MONITOR = auto()
+    DB = auto()
+
+
+class PlayerCharacter(Enum):
     # Player の正体を表す enum です。
     PURPLE = auto()
     RAINBOW = auto()
@@ -290,12 +299,35 @@ if __name__ == '__main__':
         ],
     )
     # こちらが 1st game で実行されたと考えられるコードの羅列。
-    # {code_pattern,                        player_pattern} の羅列です。
-    #  ↑実行された可能性のあるコードの順番 ↑その場合のプレイヤーの順番
+    # [{
+    #     code_pattern: [...],   <-- 実行された可能性のあるコードの順番
+    #     player_pattern: [...], <-- その場合のプレイヤーの順番
+    # }, ...]
     guesses_for_first_game = run(
         hp=drone_after_first_game.hp,
         location=drone_after_first_game.location,
         inventory=drone_after_first_game.inventory,
     )
     for _ in guesses_for_first_game:
-        print(_)
+        print('1st', _)
+
+    # 2nd game の結果を入力してね。
+    drone_after_second_game = Drone(
+        hp=-1,
+        location=Location.RED,
+        inventory=[
+            ITEM[Location.RED],
+            ITEM[Location.PURPLE],
+        ],
+    )
+    # こちらが 1st game の結果により推測される、player_patterns です。
+    guessed_player_patterns = map(lambda x: x['player_pattern'], guesses_for_first_game)
+    # こちらが 2nd game で実行されたと考えられるコードの羅列。
+    guesses_for_second_game = run(
+        hp=drone_after_second_game.hp,
+        location=drone_after_second_game.location,
+        inventory=drone_after_second_game.inventory,
+        player_patterns=guessed_player_patterns,
+    )
+    for _ in guesses_for_second_game:
+        print('2nd', _)

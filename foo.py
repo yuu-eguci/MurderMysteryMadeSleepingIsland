@@ -16,6 +16,7 @@
 3人目は紫コードの持ち主です。
 """
 
+from pprint import pprint
 from enum import Enum, auto
 import itertools
 
@@ -269,6 +270,10 @@ def run(hp, location, inventory, player_patterns=None):
                 next_code_name=next_code_name,
             )
 
+            # Drone の hp が尽きたらコードの実行は終了です。
+            if drone.hp <= 0:
+                break
+
         # code_pattern のシミュレーションを終えた drone の状態が、
         # 与えられたものと一致した場合、今回の code_pattern こそが
         # 実際に発生した code_pattern である可能性があります。
@@ -316,30 +321,44 @@ if __name__ == '__main__':
         inventory=drone_after_first_game.inventory,
     )
     # こちらが 1st game の結果により推測される、player_patterns です。
-    guessed_player_patterns = list(map(lambda x: x['player_pattern'], guesses_for_first_game))
+    guessed_player_patterns_for_first_game = list(
+        map(lambda x: x['player_pattern'], guesses_for_first_game))
     # 各プレイヤーの正体可能性リストを作ります。
     # キーがプレイヤー名で、バリューが可能性のある正体のリスト。
     player_color_possibility = {}
     for i, player in enumerate(players_for_first_game):
-        player_color_possibility[player] = list(set(map(lambda x: x[i], guessed_player_patterns)))
-    print(player_color_possibility)
+        player_color_possibility[player] = list(
+            set(map(lambda x: x[i], guessed_player_patterns_for_first_game)))
+    pprint(player_color_possibility)
 
-    # # 2nd game の結果を入力してね。
-    # drone_after_second_game = Drone(
-    #     hp=-1,
-    #     location=Location.RED,
-    #     inventory=[
-    #         ITEM[Location.RED],
-    #         ITEM[Location.PURPLE],
-    #     ],
-    # )
-
-    # # こちらが 2nd game で実行されたと考えられるコードの羅列。
-    # guesses_for_second_game = run(
-    #     hp=drone_after_second_game.hp,
-    #     location=drone_after_second_game.location,
-    #     inventory=drone_after_second_game.inventory,
-    #     player_patterns=guessed_player_patterns,
-    # )
-    # for _ in guesses_for_second_game:
-    #     print('2nd', _)
+    # 2st game のプレイヤー順を入力してね。
+    players_for_second_game = [
+        Player.MONITOR,
+        Player.PYTHON,
+        Player.DB,
+        Player.TASK,
+    ]
+    # 2nd game の結果を入力してね。
+    drone_after_second_game = Drone(
+        hp=0,
+        location=Location.BLUE,
+        inventory=[
+            ITEM[Location.GREEN],
+            ITEM[Location.BLUE],
+        ],
+    )
+    # こちらが 2nd game で実行されたと考えられるコードの羅列。
+    guesses_for_second_game = run(
+        hp=drone_after_second_game.hp,
+        location=drone_after_second_game.location,
+        inventory=drone_after_second_game.inventory,
+    )
+    # こちらが 1st game の結果により推測される、player_patterns です。
+    guessed_player_patterns_for_second_game = list(map(lambda x: x['player_pattern'], guesses_for_second_game))
+    # 各プレイヤーの正体可能性リストを更新します。
+    for i, player in enumerate(players_for_second_game):
+        possibility = set(map(lambda x: x[i], guessed_player_patterns_for_second_game))
+        # 1st game でも 2nd game でも可能性のあったものを取得します。
+        # これは set による積集合で取得できます。(できるよね?)
+        player_color_possibility[player] = set(player_color_possibility[player]) & possibility
+    pprint(player_color_possibility)

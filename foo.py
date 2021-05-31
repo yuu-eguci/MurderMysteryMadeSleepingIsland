@@ -16,7 +16,6 @@
 3人目は紫コードの持ち主です。
 """
 
-from pprint import pprint
 from enum import Enum, auto
 import itertools
 
@@ -36,6 +35,14 @@ ITEM = {
     Location.GREEN: 'GREEN',
     Location.PURPLE: 'PURPLE',
 }
+
+
+class Player(Enum):
+    # Player の正体を表す enum です。
+    PURPLE = auto()
+    RAINBOW = auto()
+    WHITE = auto()
+    BLACK = auto()
 
 
 class Drone:
@@ -152,77 +159,88 @@ class Code:
             drone.hp -= 3
 
 
-def create_all_code_patterns_generator():
+# 各プレイヤーが利用できるコードの種類です。
+PLAYER_AVAILABLE_CODES = {
+    Player.PURPLE: [
+        Code.red,
+        Code.blue,
+        Code.green,
+        Code.purple,
+    ],
+    Player.RAINBOW: [
+        Code.red,
+        Code.blue,
+        Code.green,
+        Code.purple,
+        Code.white,
+        Code.black,
+        Code.black_red,
+        Code.black_blue,
+        Code.black_green,
+        Code.black_purple,
+    ],
+    Player.WHITE: [
+        Code.red,
+        Code.blue,
+        Code.green,
+        Code.white,
+    ],
+    Player.BLACK: [
+        Code.black,
+        Code.black_red,
+        Code.black_blue,
+        Code.black_green,
+        Code.black_purple,
+    ],
+}
+
+
+def create_code_patterns_generator(player_patterns):
     # 4人のプレイヤーにより入力されるコードのパターンをすべて網羅します。
     # 返却値は [code, code, code, code] の配列で、配列の順番がコード入力の順番となります。
 
-    PURPLE_PLAYER_CODES = [
-        Code.red,
-        Code.blue,
-        Code.green,
-        Code.purple,
-    ]
-    RAINBOW_PLAYER_CODES = [
-        Code.red,
-        Code.blue,
-        Code.green,
-        Code.purple,
-        Code.white,
-        Code.black,
-        Code.black_red,
-        Code.black_blue,
-        Code.black_green,
-        Code.black_purple,
-    ]
-    WHITE_PLAYER_CODES = [
-        Code.red,
-        Code.blue,
-        Code.green,
-        Code.white,
-    ]
-    BLACK_PLAYER_CODES = [
-        Code.black,
-        Code.black_red,
-        Code.black_blue,
-        Code.black_green,
-        Code.black_purple,
-    ]
-
-    # 4人のプレイヤーの code 入力順序全パターン。
-    players = [PURPLE_PLAYER_CODES, RAINBOW_PLAYER_CODES, WHITE_PLAYER_CODES, BLACK_PLAYER_CODES]
-    player_permutations = itertools.permutations(players, len(players))
-
     # この for では、 players の全順列が取得できます。
     # NOTE: 何このコードヤバすぎ。
-    for player_codes_list in player_permutations:
-        player_code1 = player_codes_list[0]
-        player_code2 = player_codes_list[1]
-        player_code3 = player_codes_list[2]
-        player_code4 = player_codes_list[3]
-        for code1 in player_code1:
-            for code2 in player_code2:
-                for code3 in player_code3:
-                    for code4 in player_code4:
-                        yield [code1, code2, code3, code4]
+    for player_pattern in player_patterns:
+        player_codes1 = PLAYER_AVAILABLE_CODES[player_pattern[0]]
+        player_codes2 = PLAYER_AVAILABLE_CODES[player_pattern[1]]
+        player_codes3 = PLAYER_AVAILABLE_CODES[player_pattern[2]]
+        player_codes4 = PLAYER_AVAILABLE_CODES[player_pattern[3]]
+        for code1 in player_codes1:
+            for code2 in player_codes2:
+                for code3 in player_codes3:
+                    for code4 in player_codes4:
+                        yield {
+                            'code_pattern': [code1, code2, code3, code4],
+                            'player_pattern': player_pattern,
+                        }
 
 
-def run(hp, location, inventory, code_patterns=None):
+def run(hp, location, inventory, player_patterns=None):
     # メインの処理です。 hp, location, inventory の値から、何が起こったのか分析します。
     # inventory は list です。最終的に比較に使いますが、そのとき順番は不問です。
     # 順番を気にせず比較するため、あらかじめソートしておきます。
     sorted_inventory = sorted(inventory)
 
-    # 今回の分析において可能性のある code_patterns です。
-    # 与えられなければ、全可能性を用意します。(19,199通りの試算なので iterator で用意。)
-    if code_patterns == None:
-        code_patterns = create_all_code_patterns_generator()
+    # ありうるプレイヤーの順列リスト。これが length=1 ということになれば、全員の色が判明した、ということです。
+    # 最初(None)はもちろん、全可能性がありるので、全パターン用意します。
+    if player_patterns is None:
+        players = [Player.PURPLE, Player.RAINBOW, Player.WHITE, Player.BLACK]
+        player_patterns = itertools.permutations(players, len(players))
+
+    # この player_patterns のときありうる code_patterns を取得します。
+    # 最大で19,199通りの試算なので iterator で用意。
+    patterns = create_code_patterns_generator(player_patterns)
 
     # 分析は次のように行います。
     # 1. 全可能性ぶん、ドローンを用意して、全可能性ぶんの結果を観測する。
     # 2. 与えられた値と合致するパターンが、今回起こったパターンです。
     #    もちろん複数パターンが算出されることもあるでしょう。
-    possible_code_pattern = []
-    for code_pattern in code_patterns:
+    possible_patterns = []
+    for pattern in patterns:
+
+        code_pattern = pattern['code_pattern']
+        player_pattern = pattern['player_pattern']
 
         # 今回の code_pattern のための drone を生成します。
         drone = Drone()
@@ -247,22 +265,20 @@ def run(hp, location, inventory, code_patterns=None):
         # 実際に発生した code_pattern である可能性があります。
         drone.inventory.sort()
         if hp == drone.hp and location == drone.location and sorted_inventory == drone.inventory:
-            possible_code_pattern.append((
-                code_pattern[0],
-                code_pattern[1],
-                code_pattern[2],
-                code_pattern[3],
-            ))
+            possible_patterns.append({
+                'code_pattern': [
+                    code_pattern[0].__name__,
+                    code_pattern[1].__name__,
+                    code_pattern[2].__name__,
+                    code_pattern[3].__name__,
+                ],
+                'player_pattern': player_pattern,
+            })
 
-    return possible_code_pattern
+    return possible_patterns
 
 
 if __name__ == '__main__':
-
-    # 毎回 code func のリストを map __name__ かけて print してチェックするのが面倒なので関数化しています。
-    def pprint_code_patterns(code_patterns):
-        for _ in code_patterns:
-            print(tuple(map(lambda x: x.__name__, _)))
 
     # 1st game の結果を入力してね。
     drone_after_first_game = Drone(
@@ -274,11 +290,12 @@ if __name__ == '__main__':
         ],
     )
     # こちらが 1st game で実行されたと考えられるコードの羅列。
+    # {code_pattern,                        player_pattern} の羅列です。
+    #  ↑実行された可能性のあるコードの順番 ↑その場合のプレイヤーの順番
     guesses_for_first_game = run(
         hp=drone_after_first_game.hp,
         location=drone_after_first_game.location,
         inventory=drone_after_first_game.inventory,
     )
-    pprint_code_patterns(guesses_for_first_game)
-
-    # 2nd game の結果を入力してね。
+    for _ in guesses_for_first_game:
+        print(_)

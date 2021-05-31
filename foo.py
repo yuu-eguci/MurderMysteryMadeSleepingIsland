@@ -46,7 +46,7 @@ class Player(Enum):
     DB = auto()
 
 
-class PlayerCharacter(Enum):
+class PlayerColor(Enum):
     # Player の正体を表す enum です。
     PURPLE = auto()
     RAINBOW = auto()
@@ -170,13 +170,13 @@ class Code:
 
 # 各プレイヤーが利用できるコードの種類です。
 PLAYER_AVAILABLE_CODES = {
-    Player.PURPLE: [
+    PlayerColor.PURPLE: [
         Code.red,
         Code.blue,
         Code.green,
         Code.purple,
     ],
-    Player.RAINBOW: [
+    PlayerColor.RAINBOW: [
         Code.red,
         Code.blue,
         Code.green,
@@ -188,13 +188,13 @@ PLAYER_AVAILABLE_CODES = {
         Code.black_green,
         Code.black_purple,
     ],
-    Player.WHITE: [
+    PlayerColor.WHITE: [
         Code.red,
         Code.blue,
         Code.green,
         Code.white,
     ],
-    Player.BLACK: [
+    PlayerColor.BLACK: [
         Code.black,
         Code.black_red,
         Code.black_blue,
@@ -234,7 +234,7 @@ def run(hp, location, inventory, player_patterns=None):
     # ありうるプレイヤーの順列リスト。これが length=1 ということになれば、全員の色が判明した、ということです。
     # 最初(None)はもちろん、全可能性がありるので、全パターン用意します。
     if player_patterns is None:
-        players = [Player.PURPLE, Player.RAINBOW, Player.WHITE, Player.BLACK]
+        players = [PlayerColor.PURPLE, PlayerColor.RAINBOW, PlayerColor.WHITE, PlayerColor.BLACK]
         player_patterns = itertools.permutations(players, len(players))
 
     # この player_patterns のときありうる code_patterns を取得します。
@@ -289,6 +289,13 @@ def run(hp, location, inventory, player_patterns=None):
 
 if __name__ == '__main__':
 
+    # 1st game のプレイヤー順を入力してね。
+    players_for_first_game = [
+        Player.PYTHON,
+        Player.TASK,
+        Player.MONITOR,
+        Player.DB,
+    ]
     # 1st game の結果を入力してね。
     drone_after_first_game = Drone(
         hp=-1,
@@ -308,26 +315,31 @@ if __name__ == '__main__':
         location=drone_after_first_game.location,
         inventory=drone_after_first_game.inventory,
     )
-    for _ in guesses_for_first_game:
-        print('1st', _)
-
-    # 2nd game の結果を入力してね。
-    drone_after_second_game = Drone(
-        hp=-1,
-        location=Location.RED,
-        inventory=[
-            ITEM[Location.RED],
-            ITEM[Location.PURPLE],
-        ],
-    )
     # こちらが 1st game の結果により推測される、player_patterns です。
-    guessed_player_patterns = map(lambda x: x['player_pattern'], guesses_for_first_game)
-    # こちらが 2nd game で実行されたと考えられるコードの羅列。
-    guesses_for_second_game = run(
-        hp=drone_after_second_game.hp,
-        location=drone_after_second_game.location,
-        inventory=drone_after_second_game.inventory,
-        player_patterns=guessed_player_patterns,
-    )
-    for _ in guesses_for_second_game:
-        print('2nd', _)
+    guessed_player_patterns = list(map(lambda x: x['player_pattern'], guesses_for_first_game))
+    # 各プレイヤーの正体可能性リストを作ります。
+    # キーがプレイヤー名で、バリューが可能性のある正体のリスト。
+    player_color_possibility = {}
+    for i, player in enumerate(players_for_first_game):
+        player_color_possibility[player] = list(set(map(lambda x: x[i], guessed_player_patterns)))
+    print(player_color_possibility)
+
+    # # 2nd game の結果を入力してね。
+    # drone_after_second_game = Drone(
+    #     hp=-1,
+    #     location=Location.RED,
+    #     inventory=[
+    #         ITEM[Location.RED],
+    #         ITEM[Location.PURPLE],
+    #     ],
+    # )
+
+    # # こちらが 2nd game で実行されたと考えられるコードの羅列。
+    # guesses_for_second_game = run(
+    #     hp=drone_after_second_game.hp,
+    #     location=drone_after_second_game.location,
+    #     inventory=drone_after_second_game.inventory,
+    #     player_patterns=guessed_player_patterns,
+    # )
+    # for _ in guesses_for_second_game:
+    #     print('2nd', _)

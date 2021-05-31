@@ -354,7 +354,8 @@ if __name__ == '__main__':
         inventory=drone_after_second_game.inventory,
     )
     # こちらが 1st game の結果により推測される、player_patterns です。
-    guessed_player_patterns_for_second_game = list(map(lambda x: x['player_pattern'], guesses_for_second_game))
+    guessed_player_patterns_for_second_game = list(
+        map(lambda x: x['player_pattern'], guesses_for_second_game))
     # 各プレイヤーの正体可能性リストを更新します。
     for i, player in enumerate(players_for_second_game):
         possibility = set(map(lambda x: x[i], guessed_player_patterns_for_second_game))

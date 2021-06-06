@@ -1,7 +1,7 @@
 MurderMysteryMageSleepingIsland
 ===
 
-[![CI](https://github.com/yuu-eguci/MurderMysteryMageSleepingIsland/actions/workflows/ci.yml/badge.svg)](https://github.com/yuu-eguci/MurderMysteryMageSleepingIsland/actions/workflows/ci.yml)
+[![Linting by Flake8](https://github.com/yuu-eguci/MurderMysteryMageSleepingIsland/actions/workflows/ci.yml/badge.svg)](https://github.com/yuu-eguci/MurderMysteryMageSleepingIsland/actions/workflows/ci.yml)
 
 🎲 Murder mystery 魔法使いの眠る島; This repository guesses the person who keeps BLACK CODE on the game.
 

@@ -1,10 +1,10 @@
-# NOTE: cookiecutter のプロジェクトにどう .github/workflows/***.yml を置くのか
+# NOTE: cookie-cutter のプロジェクトにどう .github/workflows/***.yml を置くのか
 #       よくわかっていない状態です。
-#       今のところの方針は、実際に cookiecutter をもとにしたプロジェクトで使ってみて
+#       今のところの方針は、実際に cookie-cutter をもとにしたプロジェクトで使ってみて
 #       問題がでたら or アップデートしたいところができたら、
-#       そのプロジェクト内でテストしてみて、それをそのまま cookiecutter に持ってくる、です。
-#       cookiecutter 側では動かしてみない、ということですね。
-name: CI
+#       そのプロジェクト内でテストしてみて、それをそのまま cookie-cutter に持ってくる、です。
+#       cookie-cutter 側では動かしてみない、ということですね。
+name: Linting by Flake8
 
 on:
   push:
